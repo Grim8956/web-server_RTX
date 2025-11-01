@@ -12,6 +12,7 @@ export interface Classroom {
   capacity: number;
   has_projector: boolean;
   has_whiteboard: boolean;
+  is_available?: boolean; // 예약 가능 여부 (getAvailableClassrooms에서만 제공)
 }
 
 export interface Reservation {

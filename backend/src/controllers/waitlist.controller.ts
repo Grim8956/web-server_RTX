@@ -64,3 +64,37 @@ export const getMyWaitlist = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const cancelWaitlist = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    // 대기 신청 정보 조회
+    const [waitlistItems] = (await pool.execute(
+      'SELECT * FROM waitlist WHERE id = ?',
+      [id]
+    )) as any;
+
+    if (waitlistItems.length === 0) {
+      return res.status(404).json({ error: 'Waitlist item not found' });
+    }
+
+    const waitlistItem = waitlistItems[0];
+
+    // 본인 대기 신청만 취소 가능
+    if (waitlistItem.user_id !== req.user!.id) {
+      return res.status(403).json({ error: 'Cannot cancel other users\' waitlist items' });
+    }
+
+    // 대기 신청 취소 처리 (status를 cancelled로 변경)
+    await pool.execute(
+      'UPDATE waitlist SET status = ? WHERE id = ?',
+      ['cancelled', id]
+    );
+
+    res.json({ message: 'Waitlist item cancelled successfully' });
+  } catch (error: any) {
+    console.error('Cancel waitlist error:', error);
+    res.status(500).json({ error: 'Failed to cancel waitlist item' });
+  }
+};
+

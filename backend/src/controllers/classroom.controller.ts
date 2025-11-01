@@ -43,11 +43,18 @@ export const createClassroom = async (req: AuthRequest, res: Response) => {
 
 export const getAllClassrooms = async (req: AuthRequest, res: Response) => {
   try {
-    const [classrooms] = await pool.execute(
+    const [classrooms] = (await pool.execute(
       "SELECT * FROM classrooms ORDER BY name"
-    );
+    )) as any;
 
-    res.json({ classrooms });
+    // MySQL의 TINYINT(1)을 boolean으로 변환
+    const formattedClassrooms = classrooms.map((classroom: any) => ({
+      ...classroom,
+      has_projector: Boolean(classroom.has_projector),
+      has_whiteboard: Boolean(classroom.has_whiteboard),
+    }));
+
+    res.json({ classrooms: formattedClassrooms });
   } catch (error: any) {
     console.error("Get classrooms error:", error);
     res.status(500).json({ error: "Failed to fetch classrooms" });
@@ -67,7 +74,14 @@ export const getClassroomById = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: "Classroom not found" });
     }
 
-    res.json({ classroom: classrooms[0] });
+    // MySQL의 TINYINT(1)을 boolean으로 변환
+    const classroom = {
+      ...classrooms[0],
+      has_projector: Boolean(classrooms[0].has_projector),
+      has_whiteboard: Boolean(classrooms[0].has_whiteboard),
+    };
+
+    res.json({ classroom });
   } catch (error: any) {
     console.error("Get classroom error:", error);
     res.status(500).json({ error: "Failed to fetch classroom" });
@@ -148,19 +162,26 @@ export const getAvailableClassrooms = async (
     const start = new Date(`${date}T${startTime}`);
     const end = new Date(`${date}T${endTime}`);
 
-    // 기본 쿼리: 예약되지 않은 강의실 조회
+    // 모든 강의실 조회 (예약 여부와 상관없이) + 예약 여부 확인
     let query = `
-      SELECT c.* FROM classrooms c
-      WHERE c.id NOT IN (
-        SELECT DISTINCT r.classroom_id 
-        FROM reservations r
-        WHERE r.status = 'active'
-        AND (
-          (r.start_time < ? AND r.end_time > ?) OR
-          (r.start_time >= ? AND r.start_time < ?) OR
-          (r.end_time > ? AND r.end_time <= ?)
-        )
-      )
+      SELECT 
+        c.*,
+        CASE 
+          WHEN EXISTS (
+            SELECT 1 
+            FROM reservations r 
+            WHERE r.classroom_id = c.id 
+            AND r.status = 'active'
+            AND (
+              (r.start_time < ? AND r.end_time > ?) OR
+              (r.start_time >= ? AND r.start_time < ?) OR
+              (r.end_time > ? AND r.end_time <= ?)
+            )
+          ) THEN 0
+          ELSE 1
+        END as is_available
+      FROM classrooms c
+      WHERE 1=1
     `;
 
     const params: any[] = [end, start, start, end, start, end];
@@ -181,9 +202,17 @@ export const getAvailableClassrooms = async (
 
     query += " ORDER BY c.name";
 
-    const [classrooms] = await pool.execute(query, params);
+    const [classrooms] = (await pool.execute(query, params)) as any;
 
-    res.json({ classrooms });
+    // MySQL의 TINYINT(1)을 boolean으로 변환 + is_available도 boolean으로 변환
+    const formattedClassrooms = classrooms.map((classroom: any) => ({
+      ...classroom,
+      has_projector: Boolean(classroom.has_projector),
+      has_whiteboard: Boolean(classroom.has_whiteboard),
+      is_available: Boolean(classroom.is_available),
+    }));
+
+    res.json({ classrooms: formattedClassrooms });
   } catch (error: any) {
     console.error("Get available classrooms error:", error);
     res.status(500).json({ error: "Failed to fetch available classrooms" });

@@ -58,8 +58,16 @@ export const Search: React.FC = () => {
     }
   };
 
+  const [isWaitlistMode, setIsWaitlistMode] = useState(false);
+
   const handleReserve = (classroom: Classroom) => {
     setSelectedClassroom(classroom);
+    setIsWaitlistMode(false);
+  };
+
+  const handleWaitlist = (classroom: Classroom) => {
+    setSelectedClassroom(classroom);
+    setIsWaitlistMode(true);
   };
 
   return (
@@ -199,7 +207,7 @@ export const Search: React.FC = () => {
             <div className="bg-white shadow overflow-hidden sm:rounded-md">
               <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
                 <h2 className="text-lg font-medium text-gray-900">
-                  예약 가능한 강의실 ({classrooms.length}개)
+                  검색 결과 ({classrooms.length}개)
                 </h2>
               </div>
               <ul className="divide-y divide-gray-200">
@@ -217,6 +225,11 @@ export const Search: React.FC = () => {
                           <span className="ml-4 text-sm text-gray-500">
                             정원: {classroom.capacity}명
                           </span>
+                          {classroom.is_available === false && (
+                            <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                              예약됨
+                            </span>
+                          )}
                           {classroom.has_projector && (
                             <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                               프로젝터
@@ -228,12 +241,23 @@ export const Search: React.FC = () => {
                             </span>
                           )}
                         </div>
-                        <button
-                          onClick={() => handleReserve(classroom)}
-                          className="text-indigo-600 hover:text-indigo-900"
-                        >
-                          예약하기
-                        </button>
+                        <div className="flex gap-2">
+                          {classroom.is_available !== false ? (
+                            <button
+                              onClick={() => handleReserve(classroom)}
+                              className="text-indigo-600 hover:text-indigo-900 font-medium"
+                            >
+                              예약하기
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleWaitlist(classroom)}
+                              className="text-orange-600 hover:text-orange-900 font-medium"
+                            >
+                              대기 신청
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </li>
@@ -244,7 +268,13 @@ export const Search: React.FC = () => {
 
           {selectedClassroom && (
             <div className="mt-6">
-              <ReservationForm classroom={selectedClassroom} />
+              <ReservationForm
+                classroom={selectedClassroom}
+                isWaitlist={isWaitlistMode}
+                searchDate={searchParams.date}
+                searchStartTime={searchParams.startTime}
+                searchEndTime={searchParams.endTime}
+              />
             </div>
           )}
         </div>

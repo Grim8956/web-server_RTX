@@ -18,7 +18,7 @@ export const LoginForm: React.FC = () => {
     try {
       await login(student_id, password);
       navigate('/');
-    } catch (err: unknown) {
+    } catch (err: unknown) {  
       if (err instanceof Error) {
         setError(err.message);
       } else {

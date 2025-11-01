@@ -5,14 +5,23 @@ import { useNavigate } from "react-router-dom";
 
 interface ReservationFormProps {
   classroom: Classroom | null;
+  isWaitlist?: boolean; // 대기 신청 모드 여부
+  searchDate?: string; // 검색에서 선택한 날짜 (대기 신청 시)
+  searchStartTime?: string; // 검색에서 선택한 시작 시간
+  searchEndTime?: string; // 검색에서 선택한 종료 시간
 }
 
 export const ReservationForm: React.FC<ReservationFormProps> = ({
   classroom,
+  isWaitlist = false,
+  searchDate,
+  searchStartTime,
+  searchEndTime,
 }) => {
   const navigate = useNavigate();
-  const [selectedDate, setSelectedDate] = useState("");
-  const [startHour, setStartHour] = useState("14");
+  const [selectedDate, setSelectedDate] = useState(searchDate || "");
+  const [startHour, setStartHour] = useState(searchStartTime || "14");
+  const [endHour, setEndHour] = useState(searchEndTime || "15");
   const [participants, setParticipants] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -32,29 +41,46 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
     }
 
     const startTime = new Date(`${selectedDate}T${startHour}:00`);
-    const endTime = new Date(`${selectedDate}T${parseInt(startHour) + 1}:00`);
-
-    // 참여자 리스트 파싱
-    const participantList = participants
-      .split(",")
-      .map((p) => p.trim())
-      .filter((p) => p.length > 0);
+    const endTime = new Date(`${selectedDate}T${endHour}:00`);
 
     setLoading(true);
 
     try {
-      await apiClient.post("/reservations", {
-        classroom_id: classroom.id,
-        start_time: startTime.toISOString(),
-        end_time: endTime.toISOString(),
-        participants: participantList,
-      });
+      if (isWaitlist) {
+        // 대기 신청
+        await apiClient.post("/waitlist", {
+          classroom_id: classroom.id,
+          start_time: startTime.toISOString(),
+          end_time: endTime.toISOString(),
+        });
 
-      alert("예약이 완료되었습니다!");
-      navigate("/reservations");
-    } catch (error: any) {
-      console.error("Failed to create reservation:", error);
-      alert(error.response?.data?.error || "예약에 실패했습니다.");
+        alert("대기 신청이 완료되었습니다!");
+        navigate("/reservations");
+      } else {
+        // 일반 예약
+        // 참여자 리스트 파싱
+        const participantList = participants
+          .split(",")
+          .map((p) => p.trim())
+          .filter((p) => p.length > 0);
+
+        await apiClient.post("/reservations", {
+          classroom_id: classroom.id,
+          start_time: startTime.toISOString(),
+          end_time: endTime.toISOString(),
+          participants: participantList,
+        });
+
+        alert("예약이 완료되었습니다!");
+        navigate("/reservations");
+      }
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error && "response" in error
+          ? (error as { response?: { data?: { error?: string } } }).response?.data?.error
+          : undefined;
+      console.error(`Failed to ${isWaitlist ? "create waitlist" : "create reservation"}:`, error);
+      alert(errorMessage || `${isWaitlist ? "대기 신청" : "예약"}에 실패했습니다.`);
     } finally {
       setLoading(false);
     }
@@ -62,7 +88,9 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
 
   return (
     <div className="bg-white shadow overflow-hidden sm:rounded-md p-6">
-      <h2 className="text-lg font-medium text-gray-900 mb-4">새 예약 만들기</h2>
+      <h2 className="text-lg font-medium text-gray-900 mb-4">
+        {isWaitlist ? "대기 신청하기" : "새 예약 만들기"}
+      </h2>
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -95,7 +123,7 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
         </div>
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            시작 시간 (1시간 단위)
+            시작 시간
           </label>
           <select
             required
@@ -105,29 +133,58 @@ export const ReservationForm: React.FC<ReservationFormProps> = ({
           >
             {hours.map((hour) => (
               <option key={hour} value={hour}>
-                {hour}:00 - {hour + 1}:00
+                {hour}:00
               </option>
             ))}
           </select>
         </div>
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            참여자 학번 (쉼표로 구분)
+            종료 시간
           </label>
-          <input
-            type="text"
-            value={participants}
-            onChange={(e) => setParticipants(e.target.value)}
-            placeholder="2023001, 2023002"
+          <select
+            required
+            value={endHour}
+            onChange={(e) => setEndHour(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md"
-          />
+          >
+            {hours.map((hour) => (
+              <option key={hour} value={hour}>
+                {hour}:00
+              </option>
+            ))}
+          </select>
         </div>
+        {!isWaitlist && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              참여자 학번 (쉼표로 구분)
+            </label>
+            <input
+              type="text"
+              value={participants}
+              onChange={(e) => setParticipants(e.target.value)}
+              placeholder="2023001, 2023002"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            />
+          </div>
+        )}
         <button
           type="submit"
           disabled={loading || !classroom}
-          className="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 disabled:opacity-50"
+          className={`w-full px-4 py-2 rounded-md hover:opacity-90 disabled:opacity-50 ${
+            isWaitlist
+              ? "bg-orange-600 text-white hover:bg-orange-700"
+              : "bg-indigo-600 text-white hover:bg-indigo-700"
+          }`}
         >
-          {loading ? "예약 중..." : "예약하기"}
+          {loading
+            ? isWaitlist
+              ? "대기 신청 중..."
+              : "예약 중..."
+            : isWaitlist
+            ? "대기 신청하기"
+            : "예약하기"}
         </button>
       </form>
     </div>

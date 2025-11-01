@@ -1,25 +1,31 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 export const RegisterForm: React.FC = () => {
-  const [student_id, setStudentId] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [role, setRole] = useState('student');
-  const [error, setError] = useState('');
+  const [student_id, setStudentId] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [role, setRole] = useState("student");
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { register } = useAuth();
+  const { register, isAuthenticated, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      navigate("/");
+    }
+  }, [isAuthenticated, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setIsLoading(true);
 
     try {
       await register(student_id, password, name, role);
-      navigate('/');
+      navigate("/");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -43,7 +49,10 @@ export const RegisterForm: React.FC = () => {
           )}
           <div className="space-y-4">
             <div>
-              <label htmlFor="student_id" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="student_id"
+                className="block text-sm font-medium text-gray-700"
+              >
                 학번
               </label>
               <input
@@ -58,7 +67,10 @@ export const RegisterForm: React.FC = () => {
               />
             </div>
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700"
+              >
                 이름
               </label>
               <input
@@ -73,7 +85,10 @@ export const RegisterForm: React.FC = () => {
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
                 비밀번호
               </label>
               <input
@@ -88,7 +103,10 @@ export const RegisterForm: React.FC = () => {
               />
             </div>
             <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="role"
+                className="block text-sm font-medium text-gray-700"
+              >
                 역할
               </label>
               <select
@@ -110,12 +128,15 @@ export const RegisterForm: React.FC = () => {
               disabled={isLoading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
             >
-              {isLoading ? '가입 중...' : '회원가입'}
+              {isLoading ? "가입 중..." : "회원가입"}
             </button>
           </div>
 
           <div className="text-center">
-            <Link to="/login" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+            <Link
+              to="/login"
+              className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+            >
               이미 계정이 있으신가요? 로그인
             </Link>
           </div>
@@ -124,4 +145,3 @@ export const RegisterForm: React.FC = () => {
     </div>
   );
 };
-
