@@ -16,7 +16,6 @@ export const getMyNotifications = async (req: AuthRequest, res: Response) => {
 
     res.json({ notifications });
   } catch (error: any) {
-    console.error('Get notifications error:', error);
     res.status(500).json({ error: 'Failed to fetch notifications' });
   }
 };
@@ -32,7 +31,6 @@ export const markAsRead = async (req: AuthRequest, res: Response) => {
 
     res.json({ message: 'Notification marked as read' });
   } catch (error: any) {
-    console.error('Mark as read error:', error);
     res.status(500).json({ error: 'Failed to mark notification as read' });
   }
 };

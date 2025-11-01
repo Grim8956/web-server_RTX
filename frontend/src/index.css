@@ -1,1 +1,196 @@
 @import "tailwindcss";
+
+@layer base {
+  * {
+    @apply transition-colors duration-200;
+  }
+  
+  body {
+    @apply bg-gradient-to-br from-sky-50 via-blue-50 to-cyan-50;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-once {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.animate-pulse-once {
+  animation: pulse-once 1s ease-in-out;
+}
+
+.animate-slideIn {
+  animation: slideIn 0.4s ease-out;
+}
+
+/* Glass morphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-slate-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gradient-to-b from-blue-400 to-sky-500 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply from-blue-500 to-sky-600;
+}
+
+/* Smooth focus transitions */
+input:focus,
+select:focus,
+textarea:focus {
+  @apply ring-2 ring-blue-500 ring-offset-2 outline-none;
+}
+
+/* Button hover effects */
+.btn-gradient {
+  @apply bg-gradient-to-r from-blue-600 to-sky-600 text-white font-medium;
+  @apply hover:from-blue-700 hover:to-sky-700;
+  @apply active:scale-95 transform transition-all duration-200;
+  @apply shadow-lg hover:shadow-xl;
+}
+
+.btn-secondary {
+  @apply bg-gradient-to-r from-slate-600 to-slate-700 text-white font-medium;
+  @apply hover:from-slate-700 hover:to-slate-800;
+  @apply active:scale-95 transform transition-all duration-200;
+  @apply shadow-lg hover:shadow-xl;
+}
+
+/* Card hover effects */
+.card-hover {
+  @apply transition-all duration-300;
+  @apply hover:shadow-2xl hover:-translate-y-1;
+}
+
+/* Badge styles */
+.badge {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
+  @apply transition-all duration-200;
+}
+
+.badge-primary {
+  @apply bg-blue-100 text-blue-800;
+  @apply hover:bg-blue-200;
+}
+
+.badge-success {
+  @apply bg-emerald-100 text-emerald-800;
+  @apply hover:bg-emerald-200;
+}
+
+.badge-warning {
+  @apply bg-amber-100 text-amber-800;
+  @apply hover:bg-amber-200;
+}
+
+.badge-danger {
+  @apply bg-rose-100 text-rose-800;
+  @apply hover:bg-rose-200;
+}
+
+/* Gradient backgrounds */
+.gradient-primary {
+  @apply bg-gradient-to-r from-blue-600 via-sky-600 to-cyan-600;
+}
+
+.gradient-secondary {
+  @apply bg-gradient-to-r from-slate-600 via-slate-700 to-slate-800;
+}
+
+/* Blob animation for background */
+@keyframes blob {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* University classroom specific styles */
+.card-university {
+  @apply bg-white rounded-2xl shadow-lg border border-blue-100;
+  @apply hover:shadow-xl hover:border-blue-200 transition-all duration-300;
+}
+
+.icon-blue {
+  @apply text-blue-600;
+}
+
+.icon-sky {
+  @apply text-sky-500;
+}

@@ -13,17 +13,8 @@ const dbConfig = {
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  timezone: "+09:00", // 한국 시간대 설정
+  timezone: "+09:00",
 };
-
-// 데이터베이스 연결 설정 로그 (비밀번호 제외)
-console.log("Database configuration:", {
-  host: dbConfig.host,
-  port: dbConfig.port,
-  user: dbConfig.user,
-  database: dbConfig.database,
-  password: dbConfig.password ? "***" : "(empty - check .env file)",
-});
 
 export const pool = mysql.createPool(dbConfig);
 

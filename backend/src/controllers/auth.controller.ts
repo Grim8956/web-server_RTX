@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import pool from "../config/database";
 import { JWT_SECRET, JWT_EXPIRES_IN } from "../config/jwt";
+import { validatePassword, validateString } from "../utils/validation";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -13,23 +14,54 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "All fields are required" });
     }
 
+    // 학번 검증
+    const studentIdValidation = validateString(student_id, {
+      minLength: 7,
+      maxLength: 10,
+      pattern: /^\d+$/,
+      required: true,
+    });
+    if (!studentIdValidation.valid) {
+      return res.status(400).json({ error: `Student ID: ${studentIdValidation.error}` });
+    }
+
+    // 이름 검증
+    const nameValidation = validateString(name, {
+      minLength: 2,
+      maxLength: 50,
+      required: true,
+    });
+    if (!nameValidation.valid) {
+      return res.status(400).json({ error: `Name: ${nameValidation.error}` });
+    }
+
+    // 비밀번호 강도 검증
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.valid) {
+      return res.status(400).json({ error: passwordValidation.error });
+    }
+
     // 학번 중복 확인
     const [existingUser] = await pool.execute(
       "SELECT * FROM users WHERE student_id = ?",
-      [student_id]
+      [studentIdValidation.value]
     );
 
     if (Array.isArray(existingUser) && existingUser.length > 0) {
       return res.status(400).json({ error: "Student ID already exists" });
     }
 
-    // 비밀번호 해싱
+    // 비밀번호 해싱 (bcrypt, salt rounds: 10)
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    // 역할 검증
+    const validRoles = ['student', 'admin'];
+    const finalRole = role && validRoles.includes(role) ? role : 'student';
 
     // 사용자 생성
     const [result] = (await pool.execute(
       "INSERT INTO users (student_id, password, name, role) VALUES (?, ?, ?, ?)",
-      [student_id, hashedPassword, name, role || "student"]
+      [studentIdValidation.value, hashedPassword, nameValidation.value, finalRole]
     )) as any;
 
     // JWT 토큰 생성
@@ -44,13 +76,12 @@ export const register = async (req: Request, res: Response) => {
       token,
       user: {
         id: result.insertId,
-        student_id,
-        name,
-        role: role || "student",
+        student_id: studentIdValidation.value,
+        name: nameValidation.value,
+        role: finalRole,
       },
     });
   } catch (error: any) {
-    console.error("Register error:", error);
     res.status(500).json({ error: "Registration failed" });
   }
 };
@@ -101,7 +132,6 @@ export const login = async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
-    console.error("Login error:", error);
     res.status(500).json({ error: "Login failed" });
   }
 };

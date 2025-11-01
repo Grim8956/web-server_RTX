@@ -14,6 +14,10 @@ apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
+      // 모든 요청 타입(GET, POST, PUT, DELETE 등)에 대해 헤더 설정 보장
+      if (!config.headers) {
+        config.headers = {} as any;
+      }
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;

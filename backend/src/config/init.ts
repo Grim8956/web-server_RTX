@@ -17,12 +17,8 @@ export async function initializeDatabase() {
       await pool.execute(statement);
     }
 
-    console.log('Database schema initialized successfully');
   } catch (error: any) {
-    if (error.code === 'ER_TABLE_EXISTS_ERROR') {
-      console.log('Tables already exist, skipping initialization');
-    } else {
-      console.error('Error initializing database:', error.message);
+    if (error.code !== 'ER_TABLE_EXISTS_ERROR') {
       throw error;
     }
   }
@@ -42,10 +38,9 @@ export async function createDefaultAdmin() {
         'INSERT INTO users (student_id, password, name, role) VALUES (?, ?, ?, ?)',
         ['admin', hashedPassword, '관리자', 'admin']
       );
-      console.log('Default admin created: student_id=admin, password=admin123');
     }
   } catch (error: any) {
-    console.error('Error creating default admin:', error.message);
+    // Error creating default admin
   }
 }
 

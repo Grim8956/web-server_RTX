@@ -8,7 +8,7 @@ export const getTopClassrooms = async (req: AuthRequest, res: Response) => {
       `SELECT c.id, c.name, c.location, COUNT(*) as reservation_count
        FROM reservations r
        JOIN classrooms c ON r.classroom_id = c.id
-       WHERE r.status = 'active'
+       WHERE r.status IN ('active', 'done')
        GROUP BY c.id, c.name, c.location
        ORDER BY reservation_count DESC
        LIMIT 5`
@@ -16,7 +16,6 @@ export const getTopClassrooms = async (req: AuthRequest, res: Response) => {
 
     res.json({ topClassrooms: results });
   } catch (error: any) {
-    console.error('Get top classrooms error:', error);
     res.status(500).json({ error: 'Failed to fetch statistics' });
   }
 };

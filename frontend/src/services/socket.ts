@@ -9,21 +9,17 @@ export const initSocket = (token: string): Socket => {
     return socket;
   }
 
+  // ngrok을 통한 연결 시 WebSocket 문제 해결을 위해 polling을 우선 사용
+  // 또는 재연결 옵션 추가
   socket = io(SOCKET_URL, {
     auth: { token },
-    transports: ['websocket', 'polling'],
-  });
-
-  socket.on('connect', () => {
-    console.log('Socket connected');
-  });
-
-  socket.on('disconnect', () => {
-    console.log('Socket disconnected');
-  });
-
-  socket.on('error', (error) => {
-    console.error('Socket error:', error);
+    transports: ['polling', 'websocket'], // polling을 먼저 시도
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    reconnectionAttempts: 5,
+    timeout: 20000,
+    forceNew: false,
   });
 
   return socket;

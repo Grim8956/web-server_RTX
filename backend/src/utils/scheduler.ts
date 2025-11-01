@@ -1,5 +1,6 @@
 import cron from 'node-cron';
 import pool from '../config/database';
+import { io } from '../server';
 
 let dbConnectionErrorLogged = false;
 
@@ -34,7 +35,6 @@ export function startNotificationScheduler() {
           'INSERT INTO notifications (user_id, reservation_id, message) VALUES (?, ?, ?)',
           [reservation.user_id, reservation.id, message]
         );
-        console.log(`Notification created for reservation ${reservation.id}`);
       }
 
       // 참여자들에게도 알림 전송
@@ -51,20 +51,48 @@ export function startNotificationScheduler() {
           );
         }
       }
+
+      // end_time이 지난 예약을 'done'으로 변경
+      const [doneReservations] = await pool.execute(
+        `SELECT id, classroom_id FROM reservations 
+         WHERE status = 'active' 
+         AND end_time <= ?`,
+        [now]
+      ) as any;
+
+      if (doneReservations.length > 0) {
+        // 상태를 'done'으로 변경
+        await pool.execute(
+          `UPDATE reservations 
+           SET status = 'done' 
+           WHERE status = 'active' 
+           AND end_time <= ?`,
+          [now]
+        );
+
+        // 각 예약의 강의실에 대해 Socket.IO 이벤트 브로드캐스트
+        for (const reservation of doneReservations) {
+          io.to(`classroom:${reservation.classroom_id}`).emit(
+            'reservation:cancelled',
+            { 
+              id: reservation.id,
+              classroom_id: reservation.classroom_id
+            }
+          );
+        }
+
+      }
     } catch (error: any) {
-      // 데이터베이스 연결 오류는 처음 한 번만 로그 출력
+      // 데이터베이스 연결 오류는 처음 한 번만 처리
       if (error.message?.includes('Access denied') || error.message?.includes('ECONNREFUSED')) {
         if (!dbConnectionErrorLogged) {
-          console.error('Notification scheduler: Database connection failed. Please check your .env file and database credentials.');
-          console.error('Error:', error.message);
           dbConnectionErrorLogged = true;
         }
         return; // 데이터베이스 연결 실패 시 스케줄러 실행 중단
       }
-      console.error('Notification scheduler error:', error.message);
     }
   });
 
-  console.log('Notification scheduler started');
+  // Notification scheduler started
 }
 
