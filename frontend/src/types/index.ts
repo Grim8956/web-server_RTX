@@ -2,7 +2,7 @@ export interface User {
   id: number;
   student_id: string;
   name: string;
-  role: 'student' | 'admin';
+  role: "student" | "admin";
 }
 
 export interface Classroom {
@@ -20,7 +20,7 @@ export interface Reservation {
   user_id: number;
   start_time: string;
   end_time: string;
-  status: 'active' | 'cancelled';
+  status: "active" | "cancelled";
   classroom_name?: string;
   location?: string;
   user_name?: string;
@@ -34,7 +34,7 @@ export interface Waitlist {
   start_time: string;
   end_time: string;
   queue_position: number;
-  status: 'waiting' | 'assigned' | 'cancelled';
+  status: "waiting" | "assigned" | "cancelled";
   classroom_name?: string;
   location?: string;
 }
@@ -54,4 +54,3 @@ export interface AuthResponse {
   token: string;
   user: User;
 }
-

@@ -97,7 +97,7 @@ DB_NAME=classroom_reservation
 JWT_SECRET=your-super-secret-key
 JWT_EXPIRES_IN=24h
 
-PORT=5000
+PORT=8000
 ```
 
 ### Backend 실행
@@ -108,7 +108,7 @@ npm install
 npm run dev
 ```
 
-서버는 http://localhost:5000 에서 실행됩니다.
+서버는 http://localhost:8000 에서 실행됩니다.
 
 초기 관리자 계정:
 
@@ -124,6 +124,31 @@ npm run dev
 ```
 
 프론트엔드는 http://localhost:5173 에서 실행됩니다.
+
+### 테스트 데이터 삽입 (선택사항)
+
+테스트를 위한 샘플 데이터가 필요하다면:
+
+```bash
+# MySQL 접속
+mysql -u root -p classroom_reservation
+
+# 시드 데이터 실행
+source backend/src/config/seed.sql
+```
+
+또는:
+
+```bash
+mysql -u root -p classroom_reservation < backend/src/config/seed.sql
+```
+
+테스트 계정:
+
+- 학생: 학번 `2023001`~`2023005`, 비밀번호 `test1234`
+- 강의실: 10개 (101호~토의실)
+- 예약: 오늘, 내일, 모레 등 다양한 날짜의 예약 데이터
+- 대기열: 일부 대기 신청 데이터
 
 ## API 엔드포인트
 
@@ -189,12 +214,26 @@ npm run dev
 │   │   │   ├── database.ts
 │   │   │   ├── jwt.ts
 │   │   │   ├── init.sql
-│   │   │   └── init.ts
+│   │   │   ├── init.ts
+│   │   │   └── seed.sql
 │   │   ├── middleware/
 │   │   │   └── auth.ts
 │   │   ├── routes/
+│   │   │   ├── auth.routes.ts
+│   │   │   ├── classroom.routes.ts
+│   │   │   ├── reservation.routes.ts
+│   │   │   ├── waitlist.routes.ts
+│   │   │   ├── notification.routes.ts
+│   │   │   └── statistics.routes.ts
 │   │   ├── controllers/
+│   │   │   ├── auth.controller.ts
+│   │   │   ├── classroom.controller.ts
+│   │   │   ├── reservation.controller.ts
+│   │   │   ├── waitlist.controller.ts
+│   │   │   ├── notification.controller.ts
+│   │   │   └── statistics.controller.ts
 │   │   ├── services/
+│   │   │   └── waitlist.service.ts
 │   │   ├── utils/
 │   │   │   ├── validation.ts
 │   │   │   └── scheduler.ts
@@ -206,11 +245,21 @@ npm run dev
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── Auth/
+│   │   │   │   ├── LoginForm.tsx
+│   │   │   │   └── RegisterForm.tsx
 │   │   │   ├── Classroom/
+│   │   │   │   ├── ClassroomManagement.tsx
+│   │   │   │   └── ClassroomTimeline.tsx
 │   │   │   ├── Reservation/
-│   │   │   ├── Notification/
-│   │   │   ├── Statistics/
+│   │   │   │   └── ReservationForm.tsx
 │   │   │   └── Layout/
+│   │   │       └── Header.tsx
+│   │   ├── pages/
+│   │   │   ├── Dashboard.tsx
+│   │   │   ├── MyReservations.tsx
+│   │   │   ├── Search.tsx
+│   │   │   ├── Notifications.tsx
+│   │   │   └── Statistics.tsx
 │   │   ├── context/
 │   │   │   ├── AuthContext.tsx
 │   │   │   └── SocketContext.tsx
@@ -233,14 +282,16 @@ npm run dev
 4. 최대 7일 전까지만 예약 가능
 5. 시간 겹침 검증 (예: 14:00~16:00 예약이 있을 때 15:00~17:00 차단)
 
-## 향후 개발 계획
+## 프론트엔드 화면
 
-- [ ] 강의실 관리 화면 구현 (Admin)
-- [ ] 실시간 타임라인 화면 구현
-- [ ] 예약 생성 및 관리 화면 구현
-- [ ] 빈 강의실 검색 화면 구현
-- [ ] 알림 목록 화면 구현
-- [ ] 통계 화면 구현 (Admin)
+- ✅ 로그인/회원가입 화면
+- ✅ 메인 대시보드
+- ✅ 강의실 관리 화면 (Admin)
+- ✅ 실시간 타임라인 화면
+- ✅ 예약 생성 및 내 예약 목록 화면
+- ✅ 빈 강의실 검색 화면
+- ✅ 알림 목록 화면
+- ✅ 통계 화면 (Admin)
 
 ## 라이선스
 
