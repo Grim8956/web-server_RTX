@@ -8,10 +8,13 @@ export function startNotificationScheduler() {
   // 매 1분마다 실행
   cron.schedule('* * * * *', async () => {
     try {
+      // 현재 시간을 UTC로 가져온 후 한국 시간대(+09:00) 고려
       const now = new Date();
       const thirtyMinutesLater = new Date(now.getTime() + 30 * 60000);
       
       // 30분 후 시작하는 예약 조회
+      // 조건: 현재 시간 < 시작 시간 <= 현재 시간 + 30분
+      // AND 아직 알림이 생성되지 않은 예약만
       const [reservations] = await pool.execute(
         `SELECT r.*, u.id as user_id, c.name as classroom_name 
          FROM reservations r 
@@ -24,7 +27,8 @@ export function startNotificationScheduler() {
            SELECT 1 FROM notifications n 
            WHERE n.reservation_id = r.id 
            AND n.message LIKE '%30분 후%'
-         )`,
+         )
+         ORDER BY r.start_time ASC`,
         [now, thirtyMinutesLater]
       ) as any;
 

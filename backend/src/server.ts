@@ -16,6 +16,7 @@ import reservationRoutes from './routes/reservation.routes';
 import waitlistRoutes from './routes/waitlist.routes';
 import statisticsRoutes from './routes/statistics.routes';
 import notificationRoutes from './routes/notification.routes';
+import { startNotificationScheduler } from './utils/scheduler';
 
 dotenv.config();
 
@@ -127,7 +128,10 @@ async function initializeDatabase() {
   }
 }
 
-initializeDatabase().catch(() => {
+initializeDatabase().then(() => {
+  // 알림 스케줄러 시작 (데이터베이스 초기화 후)
+  startNotificationScheduler();
+}).catch(() => {
   // Database initialization failed
 });
 
